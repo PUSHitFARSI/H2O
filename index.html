@@ -1,0 +1,1453 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="H2O">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>H2O</title>
+<meta name="description" content="A one-bottle water tracker. Drag the water line as you drink and it keeps you on pace for your daily target.">
+<meta name="theme-color" content="#F1F5F8" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A1117" media="(prefers-color-scheme: dark)">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600&display=swap">
+<style>
+/* Layout: one graduated bottle is the instrument. Today's numbers sit above it, two actions below; everything else lives in bottom sheets. */
+:root {
+  --paper: #F1F5F8;
+  --card: #FFFFFF;
+  --well: #E3EBF1;
+  --ink: #0D1C27;
+  --ink-2: #536575;
+  --ink-3: #8798A6;
+  --rule: #D5DFE6;
+  --water: #1670BC;
+  --water-hi: #8DD3F6;
+  --water-lo: #2A8BD6;
+  --water-back: #C2E4F7;
+  --water-soft: #D2E7F5;
+  --on-water: #FFFFFF;
+  --glass: rgba(22, 112, 188, 0.045);
+  --bottle: #A9BBC8;
+  --cap: #7E93A3;
+  --mark: rgba(13, 28, 39, 0.46);
+  --mark-on: rgba(255, 255, 255, 0.95);
+  --sheen: #FFFFFF;
+  --thumb: #FFFFFF;
+  --ok: #22865A;
+  --warn: #C07408;
+  --danger: #B5382D;
+  --scrim: rgba(13, 28, 39, 0.38);
+  --toast: #0D1C27;
+  --toast-ink: #F1F5F8;
+  --toast-act: #8DD3F6;
+  --shade: rgba(13, 28, 39, 0.2);
+  --shadow: 0 16px 40px rgba(13, 28, 39, 0.18);
+  --font-ui: "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-num: "Barlow Semi Condensed", "Barlow", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #0A1117; --card: #121B23; --well: #1A262F; --ink: #E4ECF1; --ink-2: #97A7B4; --ink-3: #5F7183; --rule: #23313C;
+    --water: #5AB5F1; --water-hi: #5EC3F5; --water-lo: #1A69AF; --water-back: #1C4A6F; --water-soft: #16324B;
+    --on-water: #03111B; --glass: rgba(255, 255, 255, 0.03); --bottle: #3A4B58; --cap: #4F6372;
+    --mark: rgba(228, 236, 241, 0.52); --mark-on: rgba(255, 255, 255, 0.93); --sheen: #FFFFFF; --thumb: #E4ECF1;
+    --ok: #46BE87; --warn: #ECA640; --danger: #EE7466;
+    --scrim: rgba(0, 0, 0, 0.56); --toast: #E4ECF1; --toast-ink: #0A1117; --toast-act: #1A69AF;
+    --shade: rgba(0, 0, 0, 0.5); --shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #0A1117; --card: #121B23; --well: #1A262F; --ink: #E4ECF1; --ink-2: #97A7B4; --ink-3: #5F7183; --rule: #23313C;
+  --water: #5AB5F1; --water-hi: #5EC3F5; --water-lo: #1A69AF; --water-back: #1C4A6F; --water-soft: #16324B;
+  --on-water: #03111B; --glass: rgba(255, 255, 255, 0.03); --bottle: #3A4B58; --cap: #4F6372;
+  --mark: rgba(228, 236, 241, 0.52); --mark-on: rgba(255, 255, 255, 0.93); --sheen: #FFFFFF; --thumb: #E4ECF1;
+  --ok: #46BE87; --warn: #ECA640; --danger: #EE7466;
+  --scrim: rgba(0, 0, 0, 0.56); --toast: #E4ECF1; --toast-ink: #0A1117; --toast-act: #1A69AF;
+  --shade: rgba(0, 0, 0, 0.5); --shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+  color-scheme: dark;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 16px;
+  line-height: 1.4;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+  overscroll-behavior-y: none;
+}
+button, input, select { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--water); outline-offset: 2px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+/* ---------- main screen ---------- */
+.app {
+  min-height: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 4px 14px;
+}
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+.date { margin: 0; font-size: 15px; font-weight: 600; letter-spacing: 0.01em; color: var(--ink-2); }
+.top-actions { display: flex; gap: 2px; margin-right: -10px; }
+.icon-btn { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 12px; background: transparent; color: var(--ink); }
+.icon-btn:active { background: var(--well); }
+.icon-btn svg { width: 22px; height: 22px; }
+
+.stats { display: grid; justify-items: center; gap: 10px; margin-top: 12px; text-align: center; }
+.total {
+  border: 0; background: none; padding: 0; margin: 0;
+  font-family: var(--font-num);
+  font-size: 64px; font-weight: 600; line-height: 0.95; letter-spacing: -0.01em;
+  color: var(--ink);
+  transform-origin: 50% 60%;
+  transition: color 0.45s;
+}
+.total .unit { margin-left: 6px; font-size: 24px; font-weight: 500; letter-spacing: 0; color: var(--ink-2); transition: color 0.45s; }
+/* A logged drink makes the total jump: bigger, blue and a quick shake, then it settles back. */
+.total.pop, .total.pop .unit { color: var(--water); }
+.total.pop { animation: pop 0.95s cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes pop {
+  0% { transform: scale(1) translateX(0); }
+  12% { transform: scale(1.3) translateX(-7px); }
+  24% { transform: scale(1.3) translateX(7px); }
+  36% { transform: scale(1.3) translateX(-5px); }
+  48% { transform: scale(1.27) translateX(4px); }
+  62% { transform: scale(1.2) translateX(-2px); }
+  78% { transform: scale(1.1) translateX(1px); }
+  100% { transform: scale(1) translateX(0); }
+}
+.sub { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px 12px; min-height: 34px; font-size: 16px; color: var(--ink-2); }
+.sub .tag { margin-left: 8px; padding: 2px 6px; border-radius: 6px; background: var(--well); font-size: 11px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-2); vertical-align: 2px; }
+.chip {
+  display: inline-flex; align-items: center; gap: 6px; flex: none;
+  height: 34px; padding: 0 12px;
+  border: 1px solid var(--rule); border-radius: 999px; background: transparent;
+  font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--ink-2);
+}
+.chip svg { width: 14px; height: 14px; }
+.chip[aria-pressed="true"] { background: var(--water); border-color: var(--water); color: var(--on-water); }
+.meter { position: relative; justify-self: stretch; height: 8px; border-radius: 999px; background: var(--water-soft); }
+.meter-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; background: var(--water); transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.meter-pace { position: absolute; top: -4px; width: 2px; height: 16px; margin-left: -1px; border-radius: 2px; background: var(--ink); opacity: 0.6; transition: left 0.5s; }
+.status { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 26px; font-size: 15px; color: var(--ink); }
+.status .dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ink-3); }
+.status.ok .dot { background: var(--ok); }
+.status.warn .dot { background: var(--warn); }
+.status.done .dot { background: var(--water); }
+.setup-btn { display: inline-flex; align-items: center; gap: 2px; border: 0; background: none; padding: 2px 0; font-size: 15px; font-weight: 600; color: var(--water); }
+.setup-btn svg { width: 18px; height: 18px; }
+
+.banner {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 12px;
+  margin-top: 10px; padding: 12px 12px 12px 14px;
+  border: 1px solid var(--rule); border-radius: 16px; background: var(--card);
+}
+.banner-text { margin: 0; min-width: 0; flex: 1 1 180px; font-size: 15px; font-weight: 600; }
+.banner-note { display: block; margin-top: 2px; font-size: 13px; font-weight: 400; color: var(--ink-2); }
+.banner-actions { display: flex; gap: 8px; }
+
+.stage { position: relative; flex: 1 1 auto; min-height: 260px; margin-top: 4px; }
+#bottle { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; cursor: ns-resize; outline: none; }
+#bottle:focus-visible .outline { stroke: var(--water); }
+.hint { margin: 2px 0 0; min-height: 20px; text-align: center; font-size: 14px; color: var(--ink-2); }
+
+.actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 52px; padding: 0 16px;
+  border: 1px solid var(--rule); border-radius: 14px; background: var(--card);
+  font-size: 16px; font-weight: 600; color: var(--ink);
+  transition: transform 0.12s;
+}
+.btn:active { transform: scale(0.98); }
+.btn svg { width: 20px; height: 20px; flex: none; }
+.btn.primary { background: var(--water); border-color: var(--water); color: var(--on-water); }
+.btn.small { height: 38px; padding: 0 14px; border-radius: 10px; font-size: 14px; }
+.btn.danger { color: var(--danger); }
+
+/* ---------- bottle drawing ---------- */
+.glass { fill: var(--glass); }
+.outline { fill: none; stroke: var(--bottle); stroke-width: 3; stroke-linejoin: round; }
+.cap { fill: var(--cap); }
+.neck-ring { fill: var(--bottle); }
+.w-hi { stop-color: var(--water-hi); }
+.w-lo { stop-color: var(--water-lo); }
+.sheen-stop { stop-color: var(--sheen); }
+.wave-back path { fill: var(--water-back); }
+.wave-front { animation: drift 3.6s linear infinite; }
+.wave-back { animation: drift-back 6s linear infinite; }
+@keyframes drift { from { transform: translateX(0); } to { transform: translateX(-120px); } }
+@keyframes drift-back { from { transform: translateX(-150px); } to { transform: translateX(0); } }
+.marks line { stroke: var(--mark); stroke-width: 1.6; stroke-linecap: round; }
+.marks text { fill: var(--mark); font-family: var(--font-num); font-size: 12px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.marks.on-water line { stroke: var(--mark-on); }
+.marks.on-water text { fill: var(--mark-on); }
+.lift { flood-color: var(--shade); }
+.handle rect { fill: var(--card); }
+.handle text { fill: var(--ink); font-family: var(--font-num); font-size: 14px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.handle.is-drink text { fill: var(--water); }
+.handle.is-refill text { fill: var(--ok); }
+.bob.wobble { animation: wobble 1.1s ease-in-out; transform-box: view-box; transform-origin: 120px 498px; }
+@keyframes wobble {
+  0%, 100% { transform: rotate(0deg); }
+  15% { transform: rotate(-3deg); }
+  32% { transform: rotate(2.4deg); }
+  50% { transform: rotate(-1.6deg); }
+  68% { transform: rotate(0.9deg); }
+  84% { transform: rotate(-0.4deg); }
+}
+
+/* ---------- toast ---------- */
+.toast {
+  position: fixed; z-index: 40; left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 56px);
+  display: flex; align-items: center; gap: 10px;
+  width: max-content; max-width: min(420px, calc(100% - 32px));
+  padding: 6px 6px 6px 16px; min-height: 46px;
+  border-radius: 14px; background: var(--toast); color: var(--toast-ink);
+  font-size: 15px; font-weight: 500;
+  box-shadow: var(--shadow);
+  opacity: 0; transform: translate(-50%, -12px); pointer-events: none;
+  transition: opacity 0.22s, transform 0.22s;
+}
+.toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.toast-text { min-width: 0; }
+.toast button { flex: none; height: 34px; padding: 0 12px; border: 0; border-radius: 10px; background: transparent; font-weight: 700; color: var(--toast-act); }
+
+/* ---------- sheets ---------- */
+.sheet-wrap { position: fixed; inset: 0; z-index: 30; }
+.scrim { position: absolute; inset: 0; background: var(--scrim); opacity: 0; transition: opacity 0.25s; }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  max-width: 460px; margin: 0 auto;
+  max-height: calc(100% - env(safe-area-inset-top, 0px) - 20px);
+  overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain;
+  padding-top: 8px;
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 22px);
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  border-radius: 20px 20px 0 0; background: var(--card);
+  box-shadow: var(--shadow);
+  transform: translateY(100%);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  outline: none;
+}
+.sheet-wrap.show .scrim { opacity: 1; }
+.sheet-wrap.show .sheet { transform: translateY(0); }
+.grabber { width: 36px; height: 5px; margin: 0 auto 10px; border-radius: 3px; background: var(--rule); }
+.sheet-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.sheet-head h2 { margin: 0; font-family: var(--font-num); font-size: 26px; font-weight: 600; line-height: 1.1; text-wrap: balance; }
+.link { border: 0; background: none; padding: 8px 2px; font-size: 16px; font-weight: 600; color: var(--water); }
+.link.inline { padding: 0; font-size: inherit; }
+.lead { margin: 0 0 14px; font-size: 15px; color: var(--ink-2); }
+.note { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink-2); max-width: 62ch; }
+.empty { margin: 8px 0; font-size: 15px; color: var(--ink-2); }
+
+.section { display: grid; gap: 12px; padding: 16px 0; border-top: 1px solid var(--rule); }
+.sheet-head + .section { border-top: 0; padding-top: 4px; }
+.section-title { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-2); }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 42px; }
+.row > label { min-width: 0; font-size: 16px; }
+.field { display: grid; gap: 8px; }
+.field-label { font-size: 16px; }
+.seg { display: flex; gap: 2px; padding: 3px; border-radius: 12px; background: var(--well); }
+.seg button { flex: 1 1 0; min-width: 0; height: 36px; padding: 0 6px; border: 0; border-radius: 9px; background: transparent; font-size: 14px; font-weight: 600; white-space: nowrap; color: var(--ink-2); }
+.seg button[aria-pressed="true"] { background: var(--card); color: var(--ink); box-shadow: 0 1px 3px var(--shade); }
+.seg.is-disabled { opacity: 0.45; }
+.seg button:disabled { cursor: not-allowed; }
+.num { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.num input, .row select, .row input[type="time"] {
+  height: 42px; padding: 0 10px;
+  border: 1px solid var(--rule); border-radius: 10px; background: var(--paper);
+  font-size: 16px; color: var(--ink);
+}
+.num input { width: 86px; text-align: right; font-variant-numeric: tabular-nums; }
+.num span { font-size: 15px; color: var(--ink-2); }
+.row select { max-width: 60%; }
+.target-field { display: flex; align-items: baseline; gap: 8px; }
+.target-field input {
+  width: 4.6ch; padding: 0 0 2px;
+  border: 0; border-bottom: 2px solid var(--rule); border-radius: 0; background: transparent;
+  font-family: var(--font-num); font-size: 44px; font-weight: 600; color: var(--ink);
+}
+.target-field input:focus { outline: none; border-bottom-color: var(--water); }
+.target-field span { font-size: 18px; color: var(--ink-2); }
+.switch { position: relative; flex: none; width: 51px; height: 31px; }
+.switch input { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.switch .track { position: absolute; inset: 0; border-radius: 999px; background: var(--well); transition: background 0.2s; }
+.switch .track::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: var(--thumb); box-shadow: 0 1px 3px var(--shade); transition: transform 0.2s; }
+.switch input:checked + .track { background: var(--water); }
+.switch input:checked + .track::after { transform: translateX(20px); }
+.switch input:focus-visible + .track { outline: 2px solid var(--water); outline-offset: 2px; }
+.data-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.data-actions .btn { flex: 1 1 140px; height: 46px; }
+
+.quick { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.qbtn { display: grid; place-content: center; gap: 2px; height: 80px; border: 1px solid var(--rule); border-radius: 14px; background: var(--paper); color: var(--ink); }
+.qbtn:active { background: var(--well); }
+.q-ml { font-family: var(--font-num); font-size: 28px; font-weight: 600; line-height: 1; }
+.q-ml small { margin-left: 3px; font-family: var(--font-ui); font-size: 14px; font-weight: 500; color: var(--ink-2); }
+.q-l { font-size: 13px; color: var(--ink-2); }
+.custom { display: flex; gap: 10px; margin-top: 12px; }
+.custom .num { flex: 1 1 auto; }
+.custom .num input { width: 100%; text-align: left; }
+.custom .btn { flex: none; height: 42px; }
+
+.log { list-style: none; margin: 0; padding: 0; }
+.log li { display: grid; grid-template-columns: 50px minmax(0, 1fr) auto 38px; align-items: center; gap: 8px; min-height: 50px; border-bottom: 1px solid var(--rule); }
+.log .t { font-size: 14px; font-variant-numeric: tabular-nums; color: var(--ink-2); }
+.log .ml { font-weight: 600; font-variant-numeric: tabular-nums; }
+.log li.muted .what, .log li.muted .ml { font-weight: 400; color: var(--ink-2); }
+.x-btn { width: 38px; height: 38px; display: grid; place-items: center; border: 0; border-radius: 10px; background: none; color: var(--ink-2); }
+.x-btn svg { width: 18px; height: 18px; }
+
+/* ---------- history ---------- */
+.sample-note { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding: 8px 8px 8px 12px; border-radius: 12px; background: var(--well); font-size: 14px; color: var(--ink-2); }
+.sample-note .link { flex: none; padding: 6px 4px; font-size: 14px; }
+.figure { margin: 16px 0 0; }
+.fig-title { display: block; font-size: 16px; font-weight: 600; }
+.fig-sub { display: block; margin-top: 2px; font-size: 13px; color: var(--ink-2); }
+.chart-wrap { position: relative; margin-top: 10px; }
+.chart { display: block; width: 100%; height: auto; overflow: visible; }
+.chart .grid { stroke: var(--rule); stroke-width: 1; }
+.chart .base { stroke: var(--ink-3); stroke-width: 1; }
+.chart .axis { fill: var(--ink-2); font-family: var(--font-ui); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart .axis.is-today { fill: var(--ink); font-weight: 700; }
+.chart .bar { fill: var(--water); }
+.chart .bar.is-today { opacity: 0.5; }
+.chart .goal { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; opacity: 0.72; }
+.chart .hit { fill: transparent; outline: none; cursor: pointer; }
+.chart .hit:focus-visible { fill: var(--well); fill-opacity: 0.7; }
+.tip { position: absolute; z-index: 2; padding: 7px 10px; border-radius: 10px; background: var(--toast); color: var(--toast-ink); font-size: 13px; line-height: 1.35; white-space: nowrap; pointer-events: none; box-shadow: var(--shadow); transform: translate(-50%, calc(-100% - 8px)); }
+.tip strong { font-weight: 600; }
+.stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 12px; margin: 18px 0 6px; }
+.stat dt { font-size: 13px; color: var(--ink-2); }
+.stat dd { margin: 2px 0 0; font-family: var(--font-num); font-size: 30px; font-weight: 600; line-height: 1.1; }
+.stat dd small { margin-left: 4px; font-family: var(--font-ui); font-size: 14px; font-weight: 500; color: var(--ink-2); }
+.table-wrap { overflow-x: auto; margin-top: 6px; }
+table.days { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+table.days th, table.days td { padding: 8px 0 8px 12px; border-bottom: 1px solid var(--rule); text-align: right; white-space: nowrap; }
+table.days th { font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-2); }
+table.days th:first-child, table.days td:first-child { padding-left: 0; text-align: left; }
+
+@media (prefers-reduced-motion: reduce) {
+  .wave-front, .wave-back, .bob.wobble, .total.pop { animation: none; }
+  .meter-fill, .meter-pace, .sheet, .scrim, .toast, .btn { transition: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+  <header class="top">
+    <p class="date" id="date">Today</p>
+    <div class="top-actions">
+      <button type="button" class="icon-btn" id="btn-history" aria-label="History and stats">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-8M12 20V5M19 20v-11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+      <button type="button" class="icon-btn" id="btn-settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 8h9M17 8h3M4 16h3M11 16h9"/><circle cx="15" cy="8" r="2"/><circle cx="9" cy="16" r="2"/></g></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="stage">
+    <svg id="bottle" viewBox="0 0 240 520" preserveAspectRatio="xMidYMid meet" role="slider" tabindex="0" aria-orientation="vertical" aria-label="Water in your bottle" aria-valuemin="0" aria-valuemax="1000" aria-valuenow="1000"></svg>
+  </div>
+  <p class="hint" id="hint"></p>
+
+  <div class="banner" id="day-banner" hidden>
+    <p class="banner-text"><span id="day-text">Good morning. Is your bottle full?</span><span class="banner-note" id="day-note" hidden>Already had a drink today? Add it with Other drink.</span></p>
+    <div class="banner-actions">
+      <button type="button" class="btn small primary" id="btn-full">Yes, full</button>
+      <button type="button" class="btn small" id="btn-setlevel">Set level</button>
+    </div>
+  </div>
+  <div class="banner" id="calib-banner" hidden>
+    <p class="banner-text">Drag to your bottle's current level</p>
+    <div class="banner-actions"><button type="button" class="btn small primary" id="btn-calib-done">Done</button></div>
+  </div>
+
+  <section class="stats" aria-label="Today">
+    <button type="button" class="total" id="total" aria-label="Today's drinks. Open today's log.">0<span class="unit">mL</span></button>
+    <div class="sub">
+      <span id="of">of 2,000 mL</span>
+      <button type="button" class="chip" id="boost" aria-pressed="false">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 4.5 13.5h6.2L9.5 22l9-11.5h-6.2z" fill="currentColor"/></svg>
+        <span class="chip-label">Active day</span>
+      </button>
+    </div>
+    <div class="meter" aria-hidden="true"><div class="meter-fill" id="meter-fill"></div><div class="meter-pace" id="meter-pace" hidden></div></div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </section>
+
+  <div class="actions">
+    <button type="button" class="btn" id="btn-refill">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.5 12a8.5 8.5 0 1 1-2.5-6"/><path d="M20.5 3.5V8.8h-5.3"/></g></svg>
+      Refill
+    </button>
+    <button type="button" class="btn primary" id="btn-other">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      Other drink
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"><span class="toast-text" id="toast-text"></span><button type="button" id="toast-undo" hidden>Undo</button></div>
+
+<div class="sheet-wrap" id="sheet-wrap" hidden>
+  <div class="scrim" id="sheet-scrim"></div>
+  <div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title" tabindex="-1">
+    <div class="grabber" aria-hidden="true"></div>
+    <div id="sheet-body"></div>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+
+  /* ---------- constants ---------- */
+  const STORE_KEY = 'waterline.v1';
+  const ROLL_H = 3;             // a new day begins at 03:00
+  const SNAP = 50;              // the water line snaps to 50 mL
+  const WIND_DOWN_MIN = 90;     // pacing stops 90 minutes before bedtime
+  const VB = { h: 520, yFull: 150, yEmpty: 494, hx: 148, wallX: 186 };
+  const BOTTLE_D = 'M98 62H142V88C142 112 190 118 190 150V466Q190 498 158 498H82Q50 498 50 466V150C50 118 98 112 98 88Z';
+  const ACTIVITY = [
+    { v: 1.4, label: 'Mostly sitting', hint: 'Desk-based days with little exercise.' },
+    { v: 1.6, label: 'Lightly active', hint: 'Walking and some light exercise.' },
+    { v: 1.8, label: 'Active', hint: 'Exercise most days.' },
+    { v: 2.0, label: 'Very active', hint: 'Hard training or a physical job.' }
+  ];
+  const BOTTLES = [500, 1000, 1500];
+  const EXTRA_ML = { preg: 300, bf: 700 };
+  const COUNTED = { bottle: true, other: true };
+  const reduceMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  const ICON = {
+    chev: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+    x: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'
+  };
+
+  /* ---------- helpers ---------- */
+  const $ = (sel, root = document) => root.querySelector(sel);
+  const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const nf = new Intl.NumberFormat('en-GB');
+  const fmt = n => nf.format(Math.round(n));
+  const round50 = n => Math.round(n / 50) * 50;
+  const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+  const pad2 = n => String(n).padStart(2, '0');
+  const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const hhmm = ts => { const d = new Date(ts); return pad2(d.getHours()) + ':' + pad2(d.getMinutes()); };
+  const capLabel = c => (c >= 1000 && c % 100 === 0) ? (c / 1000).toLocaleString('en-GB') + ' L' : fmt(c) + ' mL';
+  const validHM = t => /^([01]\d|2[0-3]):[0-5]\d$/.test(t || '');
+  const keyOfDate = d => d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate());
+  const keyOf = ts => keyOfDate(new Date(ts - ROLL_H * 3600000));
+  const dateOfKey = k => { const p = k.split('-').map(Number); return new Date(p[0], p[1] - 1, p[2]); };
+  const shiftKey = (k, n) => { const d = dateOfKey(k); d.setDate(d.getDate() + n); return keyOfDate(d); };
+  const dayLabel = k => dateOfKey(k).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
+  function at(k, t) {
+    const d = dateOfKey(k);
+    const [h, m] = (validHM(t) ? t : '07:00').split(':').map(Number);
+    d.setHours(h, m, 0, 0);
+    return d.getTime();
+  }
+
+  /* ---------- state ---------- */
+  function blank() {
+    return { v: 1, u: 0, profile: null, customTarget: null, bottle: 1000, wake: '07:00', bed: '23:00', remind: true, boostMl: 500, drags: 0, days: {} };
+  }
+  function normalize(s) {
+    const out = Object.assign(blank(), s && typeof s === 'object' ? s : {});
+    if (!out.days || typeof out.days !== 'object' || Array.isArray(out.days)) out.days = {};
+    Object.keys(out.days).forEach(k => {
+      const d = out.days[k];
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || !d || typeof d !== 'object' || !Array.isArray(d.entries)) { delete out.days[k]; return; }
+      d.key = k;
+    });
+    if (!(out.bottle >= 100 && out.bottle <= 5000)) out.bottle = 1000;
+    if (!validHM(out.wake)) out.wake = '07:00';
+    if (!validHM(out.bed)) out.bed = '23:00';
+    if (!(out.boostMl >= 0 && out.boostMl <= 3000)) out.boostMl = 500;
+    if (!(out.customTarget >= 500 && out.customTarget <= 6000)) out.customTarget = null;
+    if (out.profile && typeof out.profile === 'object') {
+      if (out.profile.sex !== 'f' && out.profile.sex !== 'm') out.profile.sex = '';   // older saves could hold "Other"
+      if (out.profile.sex !== 'f') out.profile.extra = 'none';
+    } else out.profile = null;
+    return out;
+  }
+  function readLocal() { try { const raw = localStorage.getItem(STORE_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; } }
+  function writeLocal() { try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) { /* storage blocked: keep working in memory */ } }
+
+  let state = normalize(readLocal());
+
+  /* ---------- account sync (only inside Claude; the GitHub version stays on the device) ---------- */
+  const SETTINGS_KEYS = ['v', 'u', 'profile', 'customTarget', 'bottle', 'wake', 'bed', 'remind', 'boostMl', 'drags'];
+  const remote = { col: null, on: false, timers: {}, queue: {} };
+  const monthOf = k => k.slice(0, 7);
+  const settingsDoc = () => { const o = {}; SETTINGS_KEYS.forEach(f => { o[f] = state[f] === undefined ? null : state[f]; }); return o; };
+  const monthDoc = m => { const days = {}; Object.keys(state.days).forEach(k => { if (k.indexOf(m) === 0) days[k] = state.days[k]; }); return { days: days, u: Date.now() }; };
+
+  function push(docId, build) {
+    if (!remote.on) return;
+    clearTimeout(remote.timers[docId]);
+    remote.timers[docId] = setTimeout(() => {
+      let body;
+      try { body = JSON.parse(JSON.stringify(build())); } catch (e) { return; }
+      const prev = remote.queue[docId] || Promise.resolve();
+      remote.queue[docId] = prev.then(() => remote.col.doc(docId).set(body)).catch(err => {
+        const c = err && err.code;
+        if (c === 'invalid_argument' || c === 'revoked' || c === 'not_granted' || c === 'capability_disabled' || c === 'capability_removed') remote.on = false;
+      });
+    }, 700);
+  }
+
+  async function connectRemote() {
+    const c = window.claude;
+    if (!c || typeof c.use !== 'function') return;
+    try {
+      const [db, user] = await Promise.all([c.use('db'), c.use('user')]);
+      if (!db || !user) return;
+      const id = await user.id();
+      if (!id) return;
+      const col = db.collection('data/users/' + id);
+      const snap = await col.get();
+      let rs = null;
+      const rd = {};
+      snap.docs.forEach(doc => {
+        if (!doc.exists) return;
+        const body = doc.data() || {};
+        if (doc.id === 'settings') rs = body;
+        else if (doc.id.indexOf('m-') === 0 && body.days && typeof body.days === 'object') Object.keys(body.days).forEach(k => { rd[k] = body.days[k]; });
+      });
+      const merged = JSON.parse(JSON.stringify(state));
+      let pushSettings = false;
+      const months = new Set();
+      if (rs && (rs.u || 0) >= (merged.u || 0)) SETTINGS_KEYS.forEach(f => { if (f in rs) merged[f] = JSON.parse(JSON.stringify(rs[f])); });
+      else if ((merged.u || 0) > 0) pushSettings = true;
+      Object.keys(rd).forEach(k => {
+        const r = rd[k], l = merged.days[k];
+        if (r && Array.isArray(r.entries) && (!l || (r.u || 0) > (l.u || 0))) merged.days[k] = JSON.parse(JSON.stringify(r));
+      });
+      Object.keys(merged.days).forEach(k => {
+        const r = rd[k], l = merged.days[k];
+        if ((!r || (l.u || 0) > (r.u || 0)) && (l.u || 0) > 0) months.add(monthOf(k));
+      });
+      state = normalize(merged);
+      remote.col = col;
+      remote.on = true;
+      writeLocal();
+      if (pushSettings) push('settings', settingsDoc);
+      months.forEach(m => push('m-' + m, () => monthDoc(m)));
+      shownKey = null;
+      render();
+    } catch (e) { /* keep working from this device's copy */ }
+  }
+
+  function saveDay(k) {
+    const d = state.days[k];
+    if (d) d.u = Date.now();
+    const cutoff = shiftKey(keyOf(Date.now()), -400);
+    Object.keys(state.days).forEach(x => { if (x < cutoff) delete state.days[x]; });
+    writeLocal();
+    push('m-' + monthOf(k), () => monthDoc(monthOf(k)));
+  }
+  function saveSettings() {
+    state.u = Date.now();
+    const d = today();
+    writeLocal();
+    push('settings', settingsDoc);
+    saveDay(d.key);
+  }
+
+  /* ---------- the daily target ---------- */
+  // Basal metabolic rate from the Henry (Oxford) weight-only equations, MJ/day converted to kcal.
+  function bmr(sex, age, w) {
+    const c = sex === 'm'
+      ? (age < 18 ? [0.0769, 2.43] : age < 30 ? [0.0669, 2.28] : age < 60 ? [0.0592, 2.48] : [0.0563, 2.15])
+      : (age < 18 ? [0.0465, 3.18] : age < 30 ? [0.0546, 2.33] : age < 60 ? [0.0407, 2.90] : [0.0424, 2.38]);
+    return (c[0] * w + c[1]) * 239;
+  }
+  function validProfile(p) {
+    return !!p && (p.sex === 'f' || p.sex === 'm') && p.age >= 14 && p.age <= 110 && p.weight >= 30 && p.weight <= 250;
+  }
+  // About 1 mL of water per kcal used; roughly 80% of it from drinks (EFSA's food/drink split).
+  function recommended(p = state.profile) {
+    if (!validProfile(p)) return null;
+    const pal = ACTIVITY.some(a => a.v === +p.pal) ? +p.pal : 1.6;
+    let ml = bmr(p.sex, p.age, p.weight) * pal * 0.8;
+    if (p.age >= 60) ml = Math.max(ml, p.sex === 'm' ? 2000 : 1600);
+    if (p.sex === 'f') ml += EXTRA_ML[p.extra] || 0;   // EFSA: +300 mL a day in pregnancy, about +700 mL while breastfeeding
+    return clamp(round50(ml), 1200, 5000);
+  }
+  const hasTarget = () => validProfile(state.profile) || !!state.customTarget;
+  const baseTarget = () => state.customTarget || recommended() || 2000;
+  const targetOf = d => (d.target || 2000) + (d.boost ? (+d.boostMl || 0) : 0);
+  const drunkOf = d => d.entries.reduce((s, e) => s + (COUNTED[e.kind] ? (+e.ml || 0) : 0), 0);
+  const isTracked = d => !!d && (d.confirmed || d.entries.some(e => COUNTED[e.kind]));
+
+  function today(now = Date.now()) {
+    const k = keyOf(now);
+    let d = state.days[k];
+    if (!d) d = state.days[k] = { key: k, target: baseTarget(), boost: false, boostMl: state.boostMl, level: state.bottle, confirmed: false, switched: false, entries: [], u: 0 };
+    d.key = k;
+    d.target = baseTarget();
+    if (d.boost) d.boostMl = state.boostMl;
+    if (!(d.level >= 0)) d.level = state.bottle;
+    if (d.level > state.bottle) d.level = state.bottle;
+    return d;
+  }
+
+  /* ---------- pace ---------- */
+  function dayWindow(k) {
+    const start = at(k, state.wake);
+    let bed = at(k, state.bed);
+    if (bed <= start) bed += 86400000;
+    let end = bed - WIND_DOWN_MIN * 60000;
+    if (end - start < 4 * 3600000) end = bed;
+    return { start, end, bed };
+  }
+  function pace(d, now) {
+    const T = targetOf(d), got = drunkOf(d), w = dayWindow(d.key);
+    const p = clamp((now - w.start) / (w.end - w.start), 0, 1);
+    return { T, got, w, p, expected: T * p, thr: Math.max(150, round50(T * 0.1)) };
+  }
+  function statusFor(d, now) {
+    if (!hasTarget()) return { kind: 'setup' };
+    const { T, got, w, expected, thr } = pace(d, now);
+    if (got >= T) return { cls: 'done', text: 'Target reached. Nice work.' };
+    if (now < w.start) return { cls: '', text: 'Your day starts at ' + state.wake + '.' };
+    if (now >= w.bed) return { cls: '', text: 'Day done: ' + fmt(got) + ' of ' + fmt(T) + ' mL.' };
+    if (now >= w.end) return { cls: 'warn', text: fmt(round50(T - got)) + ' mL to go. Small sips before bed.' };
+    const behind = expected - got;
+    if (behind >= thr) {
+      return state.remind
+        ? { cls: 'warn', text: fmt(round50(behind)) + ' mL behind pace. Time for a drink.', nudge: true }
+        : { cls: '', text: fmt(round50(behind)) + ' mL behind pace.' };
+    }
+    let text = behind <= -thr ? 'Ahead of pace' : 'On track';
+    if (state.remind) {
+      const pn = (got + thr) / T;
+      if (pn < 1) {
+        const t = Math.ceil((w.start + pn * (w.end - w.start)) / 300000) * 300000;
+        if (t > now) text += ' · next nudge around ' + hhmm(t);
+      }
+    }
+    return { cls: 'ok', text };
+  }
+
+  /* ---------- the bottle ---------- */
+  const svg = $('#bottle');
+  const yOf = (v, cap) => VB.yEmpty - (v / cap) * (VB.yEmpty - VB.yFull);
+  const levelAt = (y, cap) => clamp((VB.yEmpty - y) / (VB.yEmpty - VB.yFull) * cap, 0, cap);
+  function wavePath(amp, len, dy) {
+    let d = 'M' + (-len) + ' ' + dy;
+    for (let x = -len; x < 480; x += len) d += ' q' + (len / 4) + ' ' + (-2 * amp) + ' ' + (len / 2) + ' 0 t' + (len / 2) + ' 0';
+    return d + ' V440 H' + (-len) + ' Z';
+  }
+  svg.innerHTML =
+    '<defs>' +
+      '<linearGradient id="g-water" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="w-hi"/><stop offset="1" class="w-lo"/></linearGradient>' +
+      '<linearGradient id="g-sheen" x1="0" y1="0" x2="1" y2="0">' +
+        '<stop offset="0" class="sheen-stop" stop-opacity="0"/><stop offset="0.1" class="sheen-stop" stop-opacity="0.26"/>' +
+        '<stop offset="0.22" class="sheen-stop" stop-opacity="0.04"/><stop offset="0.74" class="sheen-stop" stop-opacity="0"/>' +
+        '<stop offset="0.88" class="sheen-stop" stop-opacity="0.16"/><stop offset="1" class="sheen-stop" stop-opacity="0"/>' +
+      '</linearGradient>' +
+      '<clipPath id="c-bottle"><path d="' + BOTTLE_D + '"/></clipPath>' +
+      '<clipPath id="c-dry"><rect id="r-dry" x="0" y="0" width="240" height="150"/></clipPath>' +
+      '<clipPath id="c-wet"><rect id="r-wet" x="0" y="150" width="240" height="370"/></clipPath>' +
+      '<filter id="f-lift" x="-40%" y="-70%" width="180%" height="240%"><feDropShadow class="lift" dx="0" dy="1.5" stdDeviation="2.5"/></filter>' +
+    '</defs>' +
+    '<g class="bob" id="bob">' +
+      '<rect class="cap" x="91" y="18" width="58" height="44" rx="11"/>' +
+      '<rect class="neck-ring" x="95" y="60" width="50" height="8" rx="4"/>' +
+      '<path class="glass" d="' + BOTTLE_D + '"/>' +
+      '<g clip-path="url(#c-bottle)">' +
+        '<g id="water">' +
+          '<g class="wave-back"><path d="' + wavePath(4, 150, -3) + '"/></g>' +
+          '<g class="wave-front"><path d="' + wavePath(3, 120, 0) + '" fill="url(#g-water)"/></g>' +
+        '</g>' +
+        '<rect x="40" y="60" width="160" height="450" fill="url(#g-sheen)"/>' +
+      '</g>' +
+      '<g class="marks" id="marks-dry" clip-path="url(#c-dry)"></g>' +
+      '<g class="marks on-water" id="marks-wet" clip-path="url(#c-wet)"></g>' +
+      '<path class="outline" d="' + BOTTLE_D + '"/>' +
+      '<g class="handle" id="handle" filter="url(#f-lift)">' +
+        '<rect x="-39" y="-15" width="78" height="30" rx="15"/>' +
+        '<text id="handle-text" x="0" y="0" dy="0.35em" text-anchor="middle">1,000 mL</text>' +
+      '</g>' +
+    '</g>';
+  const waterEl = $('#water'), rDry = $('#r-dry'), rWet = $('#r-wet'), handle = $('#handle'), handleRect = $('#handle rect'), handleText = $('#handle-text');
+
+  function majorStep(cap) {
+    const c = [100, 200, 250, 500, 1000];
+    return c.find(m => cap % m === 0 && cap / m >= 4 && cap / m <= 8) || c.find(m => cap / m >= 3.5 && cap / m <= 8) || Math.max(50, round50(cap / 5));
+  }
+  function buildMarks() {
+    const cap = state.bottle, M = majorStep(cap), m = M / 2;
+    let s = '';
+    for (let v = m; v <= cap + 0.001; v += m) {
+      const y = yOf(v, cap).toFixed(1);
+      const major = Math.abs(v / M - Math.round(v / M)) < 1e-6;
+      s += '<line x1="53" x2="' + (major ? 71 : 63) + '" y1="' + y + '" y2="' + y + '"/>';
+      if (major) s += '<text x="77" y="' + y + '" dy="0.35em">' + Math.round(v) + '</text>';
+    }
+    $('#marks-dry').innerHTML = s;
+    $('#marks-wet').innerHTML = s;
+    svg.setAttribute('aria-valuemax', String(cap));
+  }
+
+  let shown = 0, tween = 0, calibrating = false, drag = null, kb = null, kbTimer = 0;
+  function paint(lv, from) {
+    shown = lv;
+    const cap = state.bottle;
+    const y = yOf(lv, cap);
+    waterEl.setAttribute('transform', 'translate(0 ' + y.toFixed(2) + ')');
+    waterEl.style.opacity = lv < 1 ? '0' : '1';
+    rDry.setAttribute('height', Math.max(0, y).toFixed(2));
+    rWet.setAttribute('y', y.toFixed(2));
+    rWet.setAttribute('height', Math.max(0, VB.h - y).toFixed(2));
+    let text = fmt(lv) + ' mL', cls = 'handle';
+    if (from != null && !calibrating) {
+      const diff = Math.round(lv - from);
+      if (diff < 0) { text = '−' + fmt(-diff) + ' mL'; cls += ' is-drink'; }
+      else if (diff > 0) { text = '+' + fmt(diff) + ' mL'; cls += ' is-refill'; }
+    }
+    handleText.textContent = text;
+    handle.setAttribute('class', cls);
+    // Size the pill to its text and keep it inside the bottle's right wall, clear of the printed marks.
+    let w = 78;
+    try { const tl = handleText.getComputedTextLength(); if (tl > 0) w = Math.max(64, Math.ceil(tl) + 24); } catch (_) { /* keep default */ }
+    handleRect.setAttribute('x', String(-w / 2));
+    handleRect.setAttribute('width', String(w));
+    handle.setAttribute('transform', 'translate(' + Math.min(VB.hx, VB.wallX - w / 2) + ' ' + clamp(y, VB.yFull + 6, VB.yEmpty - 18).toFixed(2) + ')');
+    svg.setAttribute('aria-valuenow', String(Math.round(lv)));
+    svg.setAttribute('aria-valuetext', fmt(lv) + ' millilitres in the bottle');
+  }
+  function animateTo(to) {
+    cancelAnimationFrame(tween);
+    tween = 0;
+    const from = shown, t0 = performance.now(), dur = reduceMotion ? 0 : 450;
+    if (!dur || Math.abs(to - from) < 1) { paint(to); return; }
+    const step = now => {
+      const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+      paint(from + (to - from) * e);
+      tween = k < 1 ? requestAnimationFrame(step) : 0;
+    };
+    tween = requestAnimationFrame(step);
+  }
+  function wobble() {
+    if (reduceMotion) return;
+    const b = $('#bob');
+    b.classList.remove('wobble');
+    void b.getBoundingClientRect();
+    b.classList.add('wobble');
+    setTimeout(() => b.classList.remove('wobble'), 1300);
+  }
+
+  function pointerLevel(e) {
+    const ctm = svg.getScreenCTM();
+    if (!ctm) return null;
+    let pt;
+    if (svg.createSVGPoint) { const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; pt = p.matrixTransform(ctm.inverse()); }
+    else pt = new DOMPoint(e.clientX, e.clientY).matrixTransform(ctm.inverse());
+    const cap = state.bottle;
+    return clamp(Math.round(levelAt(pt.y, cap) / SNAP) * SNAP, 0, cap);
+  }
+  function moveDrag(e) {
+    const lv = pointerLevel(e);
+    if (lv == null) return;
+    if (lv !== drag.cur) {
+      drag.cur = lv;
+      try { if (navigator.vibrate) navigator.vibrate(6); } catch (_) { /* no haptics here */ }
+    }
+    paint(lv, drag.from);
+  }
+  svg.addEventListener('pointerdown', e => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (sheet.open) return;
+    e.preventDefault();
+    cancelAnimationFrame(tween);
+    tween = 0;
+    const d = today();
+    try { svg.setPointerCapture(e.pointerId); } catch (_) { /* fine without capture */ }
+    drag = { id: e.pointerId, from: d.level, cur: d.level };
+    moveDrag(e);
+  });
+  svg.addEventListener('pointermove', e => { if (drag && e.pointerId === drag.id) moveDrag(e); });
+  const endDrag = e => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const g = drag;
+    drag = null;
+    commitLevel(g.from, g.cur);
+  };
+  svg.addEventListener('pointerup', endDrag);
+  svg.addEventListener('pointercancel', endDrag);
+  svg.addEventListener('keydown', e => {
+    const steps = { ArrowDown: -SNAP, ArrowLeft: -SNAP, ArrowUp: SNAP, ArrowRight: SNAP, PageDown: -250, PageUp: 250 };
+    const d = today(), cap = state.bottle;
+    const base = kb ? kb.cur : d.level;
+    let next = null;
+    if (e.key in steps) next = base + steps[e.key];
+    else if (e.key === 'Home') next = 0;
+    else if (e.key === 'End') next = cap;
+    if (next == null) return;
+    e.preventDefault();
+    if (!kb) kb = { from: d.level, cur: d.level };
+    kb.cur = clamp(next, 0, cap);
+    paint(kb.cur, kb.from);
+    clearTimeout(kbTimer);
+    kbTimer = setTimeout(() => { const k = kb; kb = null; commitLevel(k.from, k.cur); }, 800);
+  });
+
+  /* ---------- logging ---------- */
+  function confirmStart(d, level) {
+    d.level = level;
+    d.confirmed = true;
+    d.switched = false;
+    d.entries.push({ id: uid(), t: Date.now(), kind: 'start', ml: level, cap: state.bottle });
+    saveDay(d.key);
+  }
+  function commitLevel(from, to) {
+    const d = today();
+    if (calibrating) { d.level = to; saveDay(d.key); paint(to); render(); return; }
+    if (to === from) { paint(to); return; }
+    if (!d.confirmed) confirmStart(d, from);
+    const id = uid();
+    if (to < from) d.entries.push({ id, t: Date.now(), kind: 'bottle', ml: from - to });
+    else d.entries.push({ id, t: Date.now(), kind: 'refill', ml: to - from });
+    d.level = to;
+    saveDay(d.key);
+    if ((state.drags || 0) < 3) { state.drags = (state.drags || 0) + 1; saveSettings(); }
+    paint(to);
+    const msg = to < from ? 'Logged ' + fmt(from - to) + ' mL' : (to === state.bottle ? 'Refilled to full' : 'Refilled +' + fmt(to - from) + ' mL');
+    toast(msg, () => undo(id, from));
+    render();
+    if (to < from) celebrate(0);
+  }
+  // Positive feedback for every drink: the total grows, turns blue and shakes, then settles back.
+  let popTimer = 0;
+  function celebrate(delay) {
+    clearTimeout(popTimer);
+    popTimer = setTimeout(() => {
+      const t = el.total;
+      t.classList.remove('pop');
+      void t.offsetWidth;
+      t.classList.add('pop');
+      popTimer = setTimeout(() => t.classList.remove('pop'), 1150);
+    }, delay);
+  }
+  function undo(id, prevLevel) {
+    const d = today();
+    const i = d.entries.findIndex(e => e.id === id);
+    if (i >= 0) d.entries.splice(i, 1);
+    if (prevLevel != null) { d.level = prevLevel; animateTo(prevLevel); }
+    saveDay(d.key);
+    render();
+    if (sheet.open && sheet.kind === 'log') sheet.redraw();
+  }
+  function refill() {
+    if (calibrating) return;
+    const d = today(), cap = state.bottle;
+    if (!d.confirmed) { confirmStart(d, cap); animateTo(cap); render(); toast('Starting with a full ' + capLabel(cap) + ' bottle'); return; }
+    if (d.level >= cap) { toast('Your bottle is already full'); return; }
+    const from = d.level, id = uid();
+    d.entries.push({ id, t: Date.now(), kind: 'refill', ml: cap - from });
+    d.level = cap;
+    saveDay(d.key);
+    animateTo(cap);
+    toast('Refilled to full', () => undo(id, from));
+    render();
+  }
+  function addOther(ml, label) {
+    const d = today(), id = uid();
+    d.entries.push({ id, t: Date.now(), kind: 'other', ml, label: label || 'Other drink' });
+    saveDay(d.key);
+    render();
+    toast('Added ' + fmt(ml) + ' mL', () => undo(id, null));
+    celebrate(300);   // let the sheet slide away first
+  }
+  function toggleBoost() {
+    const d = today();
+    d.boost = !d.boost;
+    d.boostMl = state.boostMl;
+    saveDay(d.key);
+    render();
+    toast(d.boost ? 'Today’s target raised by ' + fmt(d.boostMl) + ' mL' : 'Active-day boost removed');
+  }
+  function setBottle(v) {
+    if (v === state.bottle) return;
+    state.bottle = v;
+    const d = today();
+    d.switched = d.confirmed || d.switched;
+    d.level = v;
+    d.confirmed = false;
+    calibrating = false;
+    buildMarks();
+    paint(v);
+    saveSettings();
+    render();
+  }
+
+  /* ---------- toast ---------- */
+  const toastEl = $('#toast'), toastText = $('#toast-text'), toastUndo = $('#toast-undo');
+  let toastTimer = 0, toastAction = null;
+  function toast(text, undoFn) {
+    toastText.textContent = text;
+    toastAction = undoFn || null;
+    toastUndo.hidden = !undoFn;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(hideToast, undoFn ? 5000 : 2400);
+  }
+  function hideToast() { toastEl.classList.remove('show'); toastAction = null; }
+  toastUndo.addEventListener('click', () => { const f = toastAction; hideToast(); if (f) f(); });
+
+  /* ---------- sheets ---------- */
+  const sheet = { open: false, kind: null, opts: null, token: 0, redraw: () => {}, wrap: $('#sheet-wrap'), panel: $('#sheet'), body: $('#sheet-body'), lastFocus: null };
+  function openSheet(kind, html, opts = {}) {
+    sheet.open = true;
+    sheet.kind = kind;
+    sheet.opts = opts;
+    sheet.token++;
+    sheet.redraw = () => {};
+    sheet.body.innerHTML = html;
+    sheet.lastFocus = document.activeElement;
+    sheet.wrap.hidden = false;
+    sheet.panel.scrollTop = 0;
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (sheet.open) sheet.wrap.classList.add('show'); }));
+    if (opts.mount) opts.mount(sheet.body);
+    try { sheet.panel.focus({ preventScroll: true }); } catch (_) { /* older browsers */ }
+  }
+  function closeSheet() {
+    if (!sheet.open) return;
+    const opts = sheet.opts, token = ++sheet.token;
+    if (opts && opts.beforeClose) opts.beforeClose();
+    sheet.open = false;
+    sheet.kind = null;
+    sheet.opts = null;
+    sheet.wrap.classList.remove('show');
+    setTimeout(() => { if (sheet.token === token && !sheet.open) { sheet.wrap.hidden = true; sheet.body.innerHTML = ''; } }, 320);
+    if (sheet.lastFocus && sheet.lastFocus.focus) { try { sheet.lastFocus.focus({ preventScroll: true }); } catch (_) { /* ignore */ } }
+    render();
+  }
+  $('#sheet-scrim').addEventListener('click', closeSheet);
+  sheet.body.addEventListener('click', e => { if (e.target.closest('[data-close]')) closeSheet(); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && sheet.open) closeSheet(); });
+
+  function twoStep(btn, armedText, action) {
+    if (btn.dataset.armed === '1') { clearTimeout(+btn.dataset.timer); delete btn.dataset.armed; action(); return; }
+    const original = btn.textContent;
+    btn.dataset.armed = '1';
+    btn.textContent = armedText;
+    btn.dataset.timer = String(setTimeout(() => { delete btn.dataset.armed; btn.textContent = original; }, 4000));
+  }
+
+  /* ---------- settings ---------- */
+  function openSettings() {
+    const draft = Object.assign({ sex: '', age: '', weight: '', pal: 1.6, extra: 'none' }, state.profile || {});
+    const pressed = b => b ? 'true' : 'false';
+    const preset = BOTTLES.indexOf(state.bottle) >= 0;
+    const html =
+      '<div class="sheet-head"><h2 id="sheet-title">Settings</h2><button type="button" class="link" data-close>Done</button></div>' +
+      '<section class="section" aria-labelledby="sec-target">' +
+        '<h3 class="section-title" id="sec-target">Daily target</h3>' +
+        '<div class="target-field"><label class="sr-only" for="target-input">Daily target in millilitres</label><input id="target-input" type="number" inputmode="numeric" min="500" max="6000" step="50"><span>mL</span></div>' +
+        '<p class="note" id="target-note"></p>' +
+      '</section>' +
+      '<section class="section" aria-labelledby="sec-you">' +
+        '<h3 class="section-title" id="sec-you">About you</h3>' +
+        '<div class="field"><span class="field-label" id="lbl-sex">Sex</span><div class="seg" role="group" aria-labelledby="lbl-sex">' +
+          ['f:Female', 'm:Male'].map(s => { const [v, l] = s.split(':'); return '<button type="button" data-sex="' + v + '" aria-pressed="' + pressed(draft.sex === v) + '">' + l + '</button>'; }).join('') +
+        '</div></div>' +
+        '<div class="field"><span class="field-label" id="lbl-extra">Pregnant or breastfeeding</span><div class="seg" id="extra-seg" role="group" aria-labelledby="lbl-extra">' +
+          ['none:No', 'preg:Pregnant', 'bf:Breastfeeding'].map(s => { const [v, l] = s.split(':'); return '<button type="button" data-extra="' + v + '" aria-pressed="' + pressed((draft.extra || 'none') === v) + '">' + l + '</button>'; }).join('') +
+        '</div><p class="note" id="extra-note" hidden></p></div>' +
+        '<div class="row"><label for="age-input">Age</label><span class="num"><input id="age-input" type="number" inputmode="numeric" min="14" max="110" step="1" value="' + esc(draft.age) + '"><span>years</span></span></div>' +
+        '<div class="row"><label for="weight-input">Weight</label><span class="num"><input id="weight-input" type="number" inputmode="decimal" min="30" max="250" step="0.5" value="' + esc(draft.weight) + '"><span>kg</span></span></div>' +
+        '<div class="row"><label for="activity-input">Activity</label><select id="activity-input">' +
+          ACTIVITY.map(a => '<option value="' + a.v + '"' + (+draft.pal === a.v ? ' selected' : '') + '>' + a.label + '</option>').join('') +
+        '</select></div>' +
+        '<p class="note" id="activity-note"></p>' +
+      '</section>' +
+      '<section class="section" aria-labelledby="sec-bottle">' +
+        '<h3 class="section-title" id="sec-bottle">Bottle</h3>' +
+        '<div class="seg" role="group" aria-labelledby="sec-bottle">' +
+          BOTTLES.map(v => '<button type="button" data-cap="' + v + '" aria-pressed="' + pressed(state.bottle === v) + '">' + capLabel(v) + '</button>').join('') +
+          '<button type="button" data-cap="custom" aria-pressed="' + pressed(!preset) + '">Custom</button>' +
+        '</div>' +
+        '<div class="row" id="custom-cap-row"' + (preset ? ' hidden' : '') + '><label for="cap-input">Bottle size</label><span class="num"><input id="cap-input" type="number" inputmode="numeric" min="100" max="5000" step="50" value="' + state.bottle + '"><span>mL</span></span></div>' +
+      '</section>' +
+      '<section class="section" aria-labelledby="sec-day">' +
+        '<h3 class="section-title" id="sec-day">Your day</h3>' +
+        '<div class="row"><label for="wake-input">Wake up</label><input id="wake-input" type="time" value="' + state.wake + '"></div>' +
+        '<div class="row"><label for="bed-input">Bedtime</label><input id="bed-input" type="time" value="' + state.bed + '"></div>' +
+        '<p class="note">Your target is spread across these hours. Pacing stops 90 minutes before bed.</p>' +
+      '</section>' +
+      '<section class="section" aria-labelledby="sec-nudge">' +
+        '<h3 class="section-title" id="sec-nudge">Nudges</h3>' +
+        '<div class="row"><label for="remind-input">Nudge me when I fall behind</label><span class="switch"><input id="remind-input" type="checkbox"' + (state.remind ? ' checked' : '') + '><span class="track"></span></span></div>' +
+        '<p class="note">Nudges show in the app. The status line turns amber and the bottle gives a small wobble.</p>' +
+        '<div class="row"><label for="boost-input">Active-day boost</label><span class="num"><input id="boost-input" type="number" inputmode="numeric" min="0" max="3000" step="50" value="' + state.boostMl + '"><span>mL</span></span></div>' +
+      '</section>' +
+      '<section class="section" aria-labelledby="sec-how">' +
+        '<h3 class="section-title" id="sec-how">How the target works</h3>' +
+        '<p class="note">Your target is estimated from your sex, age, weight and activity, at about 1 mL of water for every kcal you burn. Around 80% of that comes from drinks and the rest from food, so the target counts drinks only. For an average adult with moderate activity this lands on EFSA’s reference intakes of 2.0 L a day for women and 2.5 L for men, from food and drinks together.</p>' +
+        '<p class="note">From age 60 the target never drops below that reference. Pregnancy adds 300 mL a day and breastfeeding 700 mL, the extra amounts EFSA advises. Tea, coffee and other drinks all count.</p>' +
+        '<p class="note">This is an estimate, not medical advice. If you’ve been told to limit fluids, follow that advice instead.</p>' +
+      '</section>' +
+      '<section class="section" aria-labelledby="sec-data">' +
+        '<h3 class="section-title" id="sec-data">Your data</h3>' +
+        '<p class="note">' + (remote.on ? 'Saved privately to your Claude account, so it follows you between devices.' : 'Saved on this device only.') + '</p>' +
+        '<div class="data-actions"><button type="button" class="btn" id="reset-today">Reset today</button><button type="button" class="btn danger" id="erase-all">Erase everything</button></div>' +
+      '</section>';
+
+    openSheet('settings', html, {
+      mount: root => {
+        const tIn = $('#target-input', root), tNote = $('#target-note', root), extraSeg = $('#extra-seg', root), extraNote = $('#extra-note', root), actNote = $('#activity-note', root);
+        const sync = () => {
+          const female = draft.sex === 'f';
+          const rec = recommended(draft), ex = female ? (draft.extra || 'none') : 'none';
+          extraSeg.classList.toggle('is-disabled', !female);
+          $$('[data-extra]', root).forEach(x => { x.disabled = !female; x.setAttribute('aria-pressed', pressed(ex === x.dataset.extra)); });
+          if (document.activeElement !== tIn) tIn.value = String(state.customTarget || rec || 2000);
+          if (state.customTarget) {
+            tNote.innerHTML = rec ? 'Your own target. Recommended for you: ' + fmt(rec) + ' mL. <button type="button" class="link inline" id="use-rec">Use it</button>' : 'Your own target.';
+          } else if (rec) {
+            tNote.textContent = ex === 'bf' ? 'Recommended for you, including ' + EXTRA_ML.bf + ' mL a day for breastfeeding.'
+              : ex === 'preg' ? 'Recommended for you, including ' + EXTRA_ML.preg + ' mL a day for pregnancy.'
+              : 'Recommended for you, from the details below.';
+          } else {
+            tNote.textContent = 'An example target. Add your details below for a recommendation.';
+          }
+          extraNote.hidden = female && ex === 'none';
+          extraNote.textContent = !female ? 'Choose Female above to set this.'
+            : ex === 'bf' ? 'Adds ' + EXTRA_ML.bf + ' mL a day to replace the water that goes into breast milk. Many people find it helps to keep their bottle within reach during feeds.'
+            : ex === 'preg' ? 'Adds ' + EXTRA_ML.preg + ' mL a day.' : '';
+          actNote.textContent = (ACTIVITY.find(a => a.v === +draft.pal) || ACTIVITY[1]).hint;
+        };
+        const commitProfile = () => {
+          if (validProfile(draft)) {
+            state.profile = { sex: draft.sex, age: +draft.age, weight: +draft.weight, pal: +draft.pal || 1.6, extra: draft.sex === 'f' ? (draft.extra || 'none') : 'none' };
+            saveSettings();
+            render();
+          }
+          sync();
+        };
+        const applyTarget = raw => {
+          const v = round50(+raw);
+          if (raw === '' || !(v >= 500 && v <= 6000)) { tIn.value = ''; sync(); return; }
+          const rec = recommended(draft);
+          state.customTarget = rec && v === rec ? null : v;
+          saveSettings();
+          render();
+          tIn.value = String(v);
+          sync();
+        };
+        sheet.opts.beforeClose = () => { if (document.activeElement === tIn) applyTarget(tIn.value); };
+        root.addEventListener('click', e => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          if (b.dataset.sex) {
+            draft.sex = b.dataset.sex;
+            if (draft.sex !== 'f') draft.extra = 'none';
+            $$('[data-sex]', root).forEach(x => x.setAttribute('aria-pressed', pressed(x === b)));
+            commitProfile();
+          } else if (b.dataset.extra) {
+            if (draft.sex !== 'f') return;
+            draft.extra = b.dataset.extra;
+            commitProfile();
+          } else if (b.dataset.cap) {
+            $$('[data-cap]', root).forEach(x => x.setAttribute('aria-pressed', pressed(x === b)));
+            const row = $('#custom-cap-row', root);
+            if (b.dataset.cap === 'custom') { row.hidden = false; $('#cap-input', root).focus(); }
+            else { row.hidden = true; setBottle(+b.dataset.cap); $('#cap-input', root).value = state.bottle; }
+          } else if (b.id === 'use-rec') {
+            state.customTarget = null;
+            saveSettings();
+            render();
+            sync();
+          } else if (b.id === 'reset-today') {
+            twoStep(b, 'Tap again to reset', resetToday);
+          } else if (b.id === 'erase-all') {
+            twoStep(b, 'Tap again to erase', eraseAll);
+          }
+        });
+        $('#age-input', root).addEventListener('input', e => { draft.age = e.target.value === '' ? '' : +e.target.value; commitProfile(); });
+        $('#weight-input', root).addEventListener('input', e => { draft.weight = e.target.value === '' ? '' : +e.target.value; commitProfile(); });
+        $('#activity-input', root).addEventListener('change', e => { draft.pal = +e.target.value; commitProfile(); });
+        tIn.addEventListener('change', () => applyTarget(tIn.value));
+        $('#cap-input', root).addEventListener('change', e => {
+          const v = round50(+e.target.value);
+          if (v >= 100 && v <= 5000) { setBottle(v); e.target.value = v; } else e.target.value = state.bottle;
+        });
+        $('#wake-input', root).addEventListener('change', e => { if (validHM(e.target.value)) { state.wake = e.target.value; saveSettings(); render(); } });
+        $('#bed-input', root).addEventListener('change', e => { if (validHM(e.target.value)) { state.bed = e.target.value; saveSettings(); render(); } });
+        $('#remind-input', root).addEventListener('change', e => { state.remind = e.target.checked; saveSettings(); render(); });
+        $('#boost-input', root).addEventListener('change', e => {
+          const v = round50(+e.target.value);
+          if (e.target.value !== '' && v >= 0 && v <= 3000) { state.boostMl = v; saveSettings(); render(); } else e.target.value = state.boostMl;
+        });
+        sync();
+      }
+    });
+  }
+  function resetToday() {
+    const k = keyOf(Date.now());
+    delete state.days[k];
+    calibrating = false;
+    const d = today();
+    saveDay(d.key);
+    paint(d.level);
+    closeSheet();
+    toast('Today reset');
+  }
+  async function eraseAll() {
+    Object.keys(remote.timers).forEach(k => clearTimeout(remote.timers[k]));
+    state = blank();
+    writeLocal();
+    calibrating = false;
+    shownKey = null;
+    closeSheet();
+    toast('All data erased');
+    if (remote.on && remote.col) {
+      try {
+        const snap = await remote.col.get();
+        for (const doc of snap.docs) { if (doc.exists) await remote.col.doc(doc.id).delete(); }
+      } catch (e) { /* nothing more to do */ }
+    }
+  }
+
+  /* ---------- other drink ---------- */
+  function openOther() {
+    const q = (ml, caption, logLabel) => '<button type="button" class="qbtn" data-ml="' + ml + '" data-label="' + logLabel + '"><span class="q-ml">' + ml + '<small>mL</small></span><span class="q-l">' + caption + '</span></button>';
+    openSheet('other',
+      '<div class="sheet-head"><h2 id="sheet-title">Other drink</h2><button type="button" class="link" data-close>Cancel</button></div>' +
+      '<p class="lead">For drinks that didn’t come from your bottle. Tea and coffee count too.</p>' +
+      '<div class="quick">' + q(250, 'Glass', 'Glass') + q(330, 'Can', 'Can') + q(500, 'Bottle', 'Other bottle') + '</div>' +
+      '<form class="custom" id="other-form" novalidate>' +
+        '<label class="sr-only" for="other-ml">Custom amount in millilitres</label>' +
+        '<span class="num"><input id="other-ml" type="number" inputmode="numeric" min="10" max="3000" step="10" placeholder="Custom amount"><span>mL</span></span>' +
+        '<button type="submit" class="btn primary">Add</button>' +
+      '</form>', {
+        mount: root => {
+          root.addEventListener('click', e => {
+            const b = e.target.closest('[data-ml]');
+            if (!b) return;
+            addOther(+b.dataset.ml, b.dataset.label);
+            closeSheet();
+          });
+          $('#other-form', root).addEventListener('submit', e => {
+            e.preventDefault();
+            const input = $('#other-ml', root), v = Math.round(+input.value);
+            if (input.value !== '' && v >= 10 && v <= 3000) { addOther(v, 'Other drink'); closeSheet(); } else input.focus();
+          });
+        }
+      });
+  }
+
+  /* ---------- today's log ---------- */
+  function openLog() {
+    openSheet('log', '', {
+      mount: root => {
+        const draw = () => {
+          const d = today(), T = targetOf(d), got = drunkOf(d);
+          const row = (e, what, amount, removable) =>
+            '<li' + (removable ? '' : ' class="muted"') + '><span class="t">' + hhmm(e.t) + '</span><span class="what">' + esc(what) + '</span><span class="ml">' + amount + '</span>' +
+            (removable ? '<button type="button" class="x-btn" data-del="' + e.id + '" aria-label="Remove ' + fmt(e.ml) + ' mL logged at ' + hhmm(e.t) + '">' + ICON.x + '</button>' : '<span></span>') + '</li>';
+          const rows = d.entries.slice().reverse().map(e => {
+            if (e.kind === 'bottle') return row(e, 'From your bottle', fmt(e.ml) + ' mL', true);
+            if (e.kind === 'other') return row(e, e.label || 'Other drink', fmt(e.ml) + ' mL', true);
+            if (e.kind === 'refill') return row(e, 'Refilled the bottle', '+' + fmt(e.ml), false);
+            if (e.kind === 'start') return row(e, 'Started with ' + fmt(e.ml) + ' mL in the bottle', '', false);
+            return '';
+          }).join('');
+          root.innerHTML =
+            '<div class="sheet-head"><h2 id="sheet-title">Today</h2><button type="button" class="link" data-close>Done</button></div>' +
+            '<p class="lead">' + fmt(got) + ' of ' + fmt(T) + ' mL' + (d.boost ? ', including the ' + fmt(d.boostMl) + ' mL active-day boost' : '') + '</p>' +
+            (rows ? '<ul class="log">' + rows + '</ul>' : '<p class="empty">Nothing logged yet today. Drag the water line or add another drink.</p>');
+        };
+        sheet.redraw = draw;
+        draw();
+        root.addEventListener('click', e => {
+          const b = e.target.closest('[data-del]');
+          if (!b) return;
+          const d = today(), i = d.entries.findIndex(x => x.id === b.dataset.del);
+          if (i < 0) return;
+          const entry = d.entries.splice(i, 1)[0];
+          saveDay(d.key);
+          render();
+          draw();
+          toast('Removed ' + fmt(entry.ml) + ' mL', () => {
+            const dd = today();
+            dd.entries.splice(Math.min(i, dd.entries.length), 0, entry);
+            saveDay(dd.key);
+            render();
+            if (sheet.open && sheet.kind === 'log') sheet.redraw();
+          });
+        });
+      }
+    });
+  }
+
+  /* ---------- history ---------- */
+  function sampleDays(todayKey) {
+    // A plausible month: most days near the target, a few short, some active days.
+    const factors = [1.04, 1.1, 1.02, 0.86, 1.07, 0.93, 1.12, 1.01, 0.78, 1.05, 1.09, 0.95, 1.03, 1.14, 0.89, 1.0, 1.06, 0.91, 1.08, 1.02, 0.84, 1.11, 1.04, 0.97, 1.05, 1.0, 0.88, 1.07, 1.03];
+    const active = { 2: true, 9: true, 13: true, 20: true, 26: true };
+    const T = baseTarget(), out = {};
+    for (let i = 1; i < 30; i++) {
+      const k = shiftKey(todayKey, -i), boost = !!active[i], goal = T + (boost ? state.boostMl : 0);
+      out[k] = { key: k, target: T, boost, boostMl: state.boostMl, confirmed: true, entries: [{ kind: 'other', ml: round50(goal * factors[i - 1]) }] };
+    }
+    if (state.days[todayKey]) out[todayKey] = state.days[todayKey];
+    return out;
+  }
+  function dayRows(n, src, todayKey) {
+    const rows = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const k = shiftKey(todayKey, -i), d = src[k], tracked = isTracked(d);
+      rows.push({ k, tracked, ml: tracked ? drunkOf(d) : 0, target: tracked ? targetOf(d) : null, today: k === todayKey });
+    }
+    return rows;
+  }
+  function statsFor(rows, src, todayKey) {
+    const done = rows.filter(r => r.tracked && (!r.today || r.ml >= r.target));
+    const avg = done.length ? done.reduce((s, r) => s + r.ml, 0) / done.length : null;
+    const hit = done.filter(r => r.ml >= r.target).length;
+    const best = rows.reduce((m, r) => (r.tracked && r.ml > m ? r.ml : m), 0);
+    let streak = 0, k = todayKey;
+    const t = src[k];
+    if (!(isTracked(t) && drunkOf(t) >= targetOf(t))) k = shiftKey(k, -1);
+    for (let i = 0; i < 1000; i++) {
+      const d = src[k];
+      if (isTracked(d) && drunkOf(d) >= targetOf(d)) { streak++; k = shiftKey(k, -1); } else break;
+    }
+    return { avg, hit, of: done.length, best, streak };
+  }
+  function chartGeom(rows) {
+    const W = 344, H = 196, L = 32, R = 6, T = 12, B = 24, n = rows.length;
+    const vmax = Math.max(1000, ...rows.map(r => Math.max(r.ml, r.target || 0)));
+    const top = Math.ceil(vmax * 1.06 / 500) * 500;
+    const ph = H - T - B, pw = W - L - R, band = pw / n;
+    const bw = Math.min(24, band * (n > 10 ? 0.66 : 0.46));
+    return { W, H, L, R, T, B, n, top, ph, pw, band, bw, y: v => T + ph - (v / top) * ph, cx: i => L + band * (i + 0.5) };
+  }
+  function chartSVG(rows) {
+    const g = chartGeom(rows), gstep = g.top > 2000 ? 1000 : 500;
+    let s = '<svg class="chart" viewBox="0 0 ' + g.W + ' ' + g.H + '" role="img" aria-labelledby="chart-title">';
+    for (let v = gstep; v <= g.top; v += gstep) {
+      s += '<line class="grid" x1="' + g.L + '" x2="' + (g.W - g.R) + '" y1="' + g.y(v).toFixed(1) + '" y2="' + g.y(v).toFixed(1) + '"/>' +
+           '<text class="axis" x="' + (g.L - 7) + '" y="' + g.y(v).toFixed(1) + '" dy="0.32em" text-anchor="end">' + (v / 1000).toLocaleString('en-GB') + ' L</text>';
+    }
+    s += '<line class="base" x1="' + g.L + '" x2="' + (g.W - g.R) + '" y1="' + g.y(0) + '" y2="' + g.y(0) + '"/>';
+    rows.forEach((r, i) => {
+      const cx = g.cx(i), x = cx - g.bw / 2;
+      if (r.tracked && r.ml > 0) {
+        const yt = g.y(r.ml), h = g.y(0) - yt, rr = Math.min(4, g.bw / 2, h);
+        s += '<path class="bar' + (r.today ? ' is-today' : '') + '" d="M' + x.toFixed(1) + ' ' + g.y(0).toFixed(1) + 'V' + (yt + rr).toFixed(1) + 'Q' + x.toFixed(1) + ' ' + yt.toFixed(1) + ' ' + (x + rr).toFixed(1) + ' ' + yt.toFixed(1) +
+             'H' + (x + g.bw - rr).toFixed(1) + 'Q' + (x + g.bw).toFixed(1) + ' ' + yt.toFixed(1) + ' ' + (x + g.bw).toFixed(1) + ' ' + (yt + rr).toFixed(1) + 'V' + g.y(0).toFixed(1) + 'Z"/>';
+      }
+      if (r.tracked) s += '<line class="goal" x1="' + (x - 3).toFixed(1) + '" x2="' + (x + g.bw + 3).toFixed(1) + '" y1="' + g.y(r.target).toFixed(1) + '" y2="' + g.y(r.target).toFixed(1) + '"/>';
+      if (g.n <= 7 || (g.n - 1 - i) % 7 === 0) {
+        const lbl = g.n <= 7 ? dateOfKey(r.k).toLocaleDateString('en-GB', { weekday: 'short' }) : String(dateOfKey(r.k).getDate());
+        s += '<text class="axis' + (r.today ? ' is-today' : '') + '" x="' + cx.toFixed(1) + '" y="' + (g.H - 7) + '" text-anchor="middle">' + (r.today ? 'Today' : lbl) + '</text>';
+      }
+      s += '<rect class="hit" data-i="' + i + '" x="' + (g.L + g.band * i).toFixed(1) + '" y="' + g.T + '" width="' + g.band.toFixed(1) + '" height="' + g.ph + '" tabindex="0" aria-label="' + esc(tipText(r).replace(/<[^>]+>/g, ' ')) + '"/>';
+    });
+    return s + '</svg>';
+  }
+  function tipText(r) {
+    const head = '<strong>' + dayLabel(r.k) + (r.today ? ' (today)' : '') + '</strong><br>';
+    if (!r.tracked) return head + 'Not tracked';
+    const gap = r.target - r.ml;
+    return head + fmt(r.ml) + ' of ' + fmt(r.target) + ' mL<br>' + (gap <= 0 ? 'Target reached' : fmt(gap) + ' mL short');
+  }
+  function tableHTML(rows) {
+    return '<table class="days"><thead><tr><th scope="col">Day</th><th scope="col">Drank</th><th scope="col">Target</th></tr></thead><tbody>' +
+      rows.slice().reverse().map(r => '<tr><td>' + dayLabel(r.k) + (r.today ? ' (today)' : '') + '</td><td>' + (r.tracked ? fmt(r.ml) + ' mL' : '–') + '</td><td>' + (r.tracked ? fmt(r.target) + ' mL' : '–') + '</td></tr>').join('') +
+      '</tbody></table>';
+  }
+  function bindChart(root, rows) {
+    const wrap = $('#chart-wrap', root), tip = $('#tip', root), chart = $('svg', wrap), g = chartGeom(rows);
+    const show = i => {
+      const r = rows[i];
+      if (!r) return;
+      tip.innerHTML = tipText(r);
+      tip.hidden = false;
+      const scale = wrap.clientWidth / g.W, half = tip.offsetWidth / 2;
+      const topV = r.tracked ? Math.max(r.ml, r.target) : 0;
+      tip.style.left = clamp(g.cx(i) * scale, half, wrap.clientWidth - half) + 'px';
+      tip.style.top = (g.y(topV) * scale) + 'px';
+    };
+    const hide = () => { tip.hidden = true; };
+    $$('.hit', chart).forEach(h => {
+      const i = +h.dataset.i;
+      h.addEventListener('pointerenter', e => { if (e.pointerType === 'mouse') show(i); });
+      h.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') hide(); });
+      h.addEventListener('click', () => show(i));
+      h.addEventListener('focus', () => show(i));
+      h.addEventListener('blur', hide);
+    });
+  }
+  function openHistory() {
+    let range = 7;
+    const tk0 = keyOf(Date.now());
+    const realPast = Object.keys(state.days).filter(k => k < tk0 && isTracked(state.days[k])).length;
+    let sample = realPast < 2;
+    openSheet('history', '', {
+      mount: root => {
+        const draw = () => {
+          const tk = keyOf(Date.now());
+          const src = sample ? sampleDays(tk) : state.days;
+          const rows = dayRows(range, src, tk), st = statsFor(rows, src, tk);
+          const dash = '–';
+          root.innerHTML =
+            '<div class="sheet-head"><h2 id="sheet-title">History</h2><button type="button" class="link" data-close>Done</button></div>' +
+            '<div class="seg" role="group" aria-label="Range"><button type="button" data-range="7" aria-pressed="' + (range === 7) + '">7 days</button><button type="button" data-range="30" aria-pressed="' + (range === 30) + '">30 days</button></div>' +
+            (sample
+              ? '<div class="sample-note"><span>Sample data. Your own days replace it as you log them.</span><button type="button" class="link" data-sample="0">Show mine</button></div>'
+              : (realPast < 2 ? '<div class="sample-note"><span>Your history starts today.</span><button type="button" class="link" data-sample="1">Show sample</button></div>' : '')) +
+            '<figure class="figure"><figcaption><span class="fig-title" id="chart-title">Daily intake' + (sample ? ' (sample)' : '') + '</span><span class="fig-sub">Bars show what you drank. The short line marks each day’s target.</span></figcaption>' +
+            '<div class="chart-wrap" id="chart-wrap">' + chartSVG(rows) + '<div class="tip" id="tip" hidden></div></div></figure>' +
+            '<dl class="stats-grid">' +
+              '<div class="stat"><dt>Daily average</dt><dd>' + (st.avg == null ? dash : fmt(round50(st.avg)) + '<small>mL</small>') + '</dd></div>' +
+              '<div class="stat"><dt>On target</dt><dd>' + (st.of ? st.hit + '<small>of ' + st.of + ' days</small>' : dash) + '</dd></div>' +
+              '<div class="stat"><dt>Streak</dt><dd>' + st.streak + '<small>' + (st.streak === 1 ? 'day' : 'days') + '</small></dd></div>' +
+              '<div class="stat"><dt>Best day</dt><dd>' + (st.best ? fmt(st.best) + '<small>mL</small>' : dash) + '</dd></div>' +
+            '</dl>' +
+            '<button type="button" class="link" id="table-toggle" aria-expanded="false" aria-controls="table-wrap">Show as a table</button>' +
+            '<div class="table-wrap" id="table-wrap" hidden>' + tableHTML(rows) + '</div>';
+          bindChart(root, rows);
+        };
+        sheet.redraw = draw;
+        draw();
+        root.addEventListener('click', e => {
+          const b = e.target.closest('button');
+          if (!b) return;
+          if (b.dataset.range) { range = +b.dataset.range; draw(); }
+          else if (b.dataset.sample) { sample = b.dataset.sample === '1'; draw(); }
+          else if (b.id === 'table-toggle') {
+            const w = $('#table-wrap', root);
+            w.hidden = !w.hidden;
+            b.setAttribute('aria-expanded', String(!w.hidden));
+            b.textContent = w.hidden ? 'Show as a table' : 'Hide the table';
+          }
+        });
+      }
+    });
+  }
+
+  /* ---------- main render ---------- */
+  const el = {
+    date: $('#date'), total: $('#total'), of: $('#of'), boost: $('#boost'), boostLabel: $('#boost .chip-label'),
+    fill: $('#meter-fill'), pace: $('#meter-pace'), status: $('#status'),
+    dayBanner: $('#day-banner'), dayText: $('#day-text'), dayNote: $('#day-note'), calib: $('#calib-banner'), hint: $('#hint')
+  };
+  let shownKey = null, lastNudge = 0;
+  function render() {
+    const now = Date.now();
+    const d = today(now);
+    if (shownKey !== d.key) {
+      shownKey = d.key;
+      calibrating = false;
+      buildMarks();
+      if (!drag && !kb) paint(d.level);
+    }
+    if (!drag && !kb && !tween && Math.abs(shown - d.level) > 0.5) paint(d.level);
+    const T = targetOf(d), got = drunkOf(d), pc = pace(d, now), ready = hasTarget();
+    el.date.textContent = dateOfKey(d.key).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+    el.total.innerHTML = fmt(got) + '<span class="unit">mL</span>';
+    el.of.innerHTML = 'of ' + fmt(T) + ' mL' + (ready ? '' : '<span class="tag">Example</span>');
+    el.fill.style.width = (Math.min(1, got / T) * 100).toFixed(1) + '%';
+    const showPace = ready && got < T && now >= pc.w.start && now <= pc.w.end;
+    el.pace.hidden = !showPace;
+    if (showPace) el.pace.style.left = (pc.p * 100).toFixed(1) + '%';
+    el.boost.setAttribute('aria-pressed', d.boost ? 'true' : 'false');
+    el.boostLabel.textContent = d.boost ? 'Active day +' + fmt(d.boostMl || state.boostMl) : 'Active day';
+
+    const st = statusFor(d, now);
+    if (st.kind === 'setup') {
+      el.status.className = 'status';
+      el.status.innerHTML = '<button type="button" class="setup-btn" id="setup-btn">Set your daily target' + ICON.chev + '</button>';
+    } else {
+      el.status.className = 'status' + (st.cls ? ' ' + st.cls : '');
+      el.status.innerHTML = '<span class="dot" aria-hidden="true"></span><span>' + esc(st.text) + '</span>';
+    }
+
+    el.dayBanner.hidden = d.confirmed || calibrating;
+    if (!d.confirmed) {
+      const h = new Date(now).getHours();
+      const hello = d.switched ? 'New bottle.' : h < 12 ? 'Good morning.' : h < 18 ? 'Good afternoon.' : 'Good evening.';
+      el.dayText.textContent = hello + ' Is your ' + capLabel(state.bottle) + ' bottle full?';
+      el.dayNote.hidden = !(!d.switched && got === 0 && now > pc.w.start + 2 * 3600000);
+    }
+    el.calib.hidden = !calibrating;
+    el.hint.textContent = calibrating ? 'Drag until the water matches your bottle.' : (d.confirmed && (state.drags || 0) < 2 ? 'Drag the water line down as you drink.' : '');
+
+    if (st.nudge && !document.hidden && !sheet.open && now - lastNudge > 45 * 60000) { lastNudge = now; wobble(); }
+  }
+
+  /* ---------- wiring ---------- */
+  $('#btn-history').addEventListener('click', openHistory);
+  $('#btn-settings').addEventListener('click', openSettings);
+  el.total.addEventListener('click', openLog);
+  el.boost.addEventListener('click', toggleBoost);
+  $('#btn-refill').addEventListener('click', refill);
+  $('#btn-other').addEventListener('click', openOther);
+  el.status.addEventListener('click', e => { if (e.target.closest('#setup-btn')) openSettings(); });
+  $('#btn-full').addEventListener('click', () => {
+    const d = today();
+    confirmStart(d, state.bottle);
+    animateTo(state.bottle);
+    render();
+    toast('Starting with a full ' + capLabel(state.bottle) + ' bottle');
+  });
+  $('#btn-setlevel').addEventListener('click', () => { calibrating = true; render(); try { svg.focus({ preventScroll: true }); } catch (_) { /* ignore */ } });
+  $('#btn-calib-done').addEventListener('click', () => {
+    const d = today();
+    calibrating = false;
+    confirmStart(d, d.level);
+    paint(d.level);
+    render();
+    toast('Starting with ' + fmt(d.level) + ' mL');
+  });
+
+  buildMarks();
+  paint(today().level);
+  render();
+  setInterval(render, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) render(); });
+  window.addEventListener('focus', render);
+  connectRemote();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+  window.addEventListener('load', () => { navigator.serviceWorker.register('sw.js').catch(() => {}); });
+}
+if (navigator.storage && navigator.storage.persist) { navigator.storage.persist().catch(() => {}); }
+</script>
+</body>
+</html>
